@@ -4,7 +4,6 @@ import { useRouter } from 'next/router'
 import { useMemo, useState } from 'react'
 
 import { useParams } from 'common'
-import { untitledSnippetTitle } from 'components/interfaces/SQLEditor/SQLEditor.constants'
 import { createSqlSnippetSkeleton } from 'components/interfaces/SQLEditor/SQLEditor.utils'
 import ProductMenuItem from 'components/ui/ProductMenu/ProductMenuItem'
 import ShimmeringLoader from 'components/ui/ShimmeringLoader'
@@ -13,7 +12,8 @@ import { useCheckPermissions, useFlag, useStore } from 'hooks'
 import { uuidv4 } from 'lib/helpers'
 import { useProfile } from 'lib/profile'
 import { useSnippets, useSqlEditorStateSnapshot } from 'state/sql-editor'
-import { Button, cn, IconPlus, IconSearch, IconX, Input, Menu } from 'ui'
+import { Button, cn, IconPlus, IconSearch, IconX, Input, Menu, useCommandMenu } from 'ui'
+import { useProjectContext } from '../ProjectLayout/ProjectContext'
 import QueryItem from './QueryItem'
 
 const SideBarContent = observer(() => {
@@ -29,6 +29,10 @@ const SideBarContent = observer(() => {
   const [isPersonalSnippetsFilterOpen, setIsPersonalSnippetsFilterOpen] = useState(false)
   const [isProjectSnippetsFilterOpen, setIsProjectSnippetsFilterOpen] = useState(false)
   const [isFavoritesFilterOpen, setIsFavoritesFilterOpen] = useState(false)
+  const [filterString, setFilterString] = useState('')
+  const { setPages, setIsOpen } = useCommandMenu()
+  const showCmdkHelper = useFlag('dashboardCmdk')
+  const { project } = useProjectContext()
 
   const snap = useSqlEditorStateSnapshot()
   const { isLoading, isSuccess } = useSqlSnippetsQuery(ref, {
@@ -84,7 +88,8 @@ const SideBarContent = observer(() => {
   })
 
   const handleNewQuery = async () => {
-    if (!ref) return console.error('Project ref is required')
+    if (!project) return console.error('Project is required')
+    if (!profile) return console.error('Profile is required')
     if (!canCreateSQLSnippet) {
       return ui.setNotification({
         category: 'info',
@@ -94,14 +99,15 @@ const SideBarContent = observer(() => {
 
     try {
       const snippet = createSqlSnippetSkeleton({
-        name: untitledSnippetTitle,
-        owner_id: profile?.id,
+        id: uuidv4(),
+        name: 'Untitled query',
+        owner_id: profile.id,
+        project_id: project.id,
       })
-      const data = { ...snippet, id: uuidv4() }
 
-      snap.addSnippet(data as SqlSnippet, ref, true)
+      snap.addSnippet(snippet as SqlSnippet, project.ref)
 
-      router.push(`/project/${ref}/sql/${data.id}`)
+      router.push(`/project/${ref}/sql/${snippet.id}`)
       // reset all search inputs when a new query is added
       setPersonalSnippetsFilterString('')
       setProjectSnippetsFilterString('')
