@@ -114,31 +114,6 @@ const MigrateOrganizationBillingButton = observer(() => {
         <div className="space-y-4 py-3">
           <Modal.Content>
             <div className="space-y-2">
-              <Alert title="About the migration" withIcon variant="info">
-                <div className="text-sm space-y-2">
-                  <p>
-                    Migrating to new organization-level billing combines subscriptions for all
-                    projects in the organization into a single subscription.
-                  </p>
-
-                  <p>
-                    For a detailed breakdown of changes, see{' '}
-                    <Link href="https://www.notion.so/supabase/Organization-Level-Billing-9c159d69375b4af095f0b67881276582?pvs=4">
-                      <a target="_blank" rel="noreferrer" className="underline">
-                        Billing Migration Docs
-                      </a>
-                    </Link>
-                    . To transfer projects to a different organization, visit{' '}
-                    <Link href="/projects/_/settings/general">
-                      <a target="_blank" rel="noreferrer" className="underline">
-                        General settings
-                      </a>
-                    </Link>
-                    .
-                  </p>
-                </div>
-              </Alert>
-
               <Alert title="Irreversible" withIcon variant="danger">
                 <div className="text-sm">
                   <p>
@@ -147,6 +122,54 @@ const MigrateOrganizationBillingButton = observer(() => {
                   </p>
                 </div>
               </Alert>
+
+              {migrationPreviewData?.addons_to_be_removed &&
+                migrationPreviewData.addons_to_be_removed.length > 0 && (
+                  <Alert withIcon variant="warning" title="Project addons will be removed">
+                    <div className="text-sm">
+                      The following project addons will be removed when downgrading
+                      <ul className="list-disc list-inside pl-4">
+                        {migrationPreviewData.addons_to_be_removed.map((addon) =>
+                          addon.addons.map((variant) => (
+                            <li key={`${addon.projectRef}-${variant.variant}`}>
+                              {variant.type === 'pitr'
+                                ? 'PITR - '
+                                : variant.type === 'compute_instance'
+                                ? 'Compute Instance - '
+                                : ''}
+                              {variant.name} for {addon.projectName || addon.projectRef}
+                            </li>
+                          ))
+                        )}
+                      </ul>
+                    </div>
+                  </Alert>
+                )}
+            </div>
+          </Modal.Content>
+          <Modal.Separator />
+          <Modal.Content>
+            <div className="text-scale-1000 text-sm space-y-2">
+              <p>
+                Migrating to new organization-level billing combines subscriptions for all projects
+                in the organization into a single subscription.
+              </p>
+
+              <p>
+                For a detailed breakdown of changes, see{' '}
+                <Link href="https://www.notion.so/supabase/Organization-Level-Billing-9c159d69375b4af095f0b67881276582?pvs=4">
+                  <a target="_blank" rel="noreferrer" className="underline">
+                    Billing Migration Docs
+                  </a>
+                </Link>
+                . To transfer projects to a different organization, visit{' '}
+                <Link href="/projects/_/settings/general">
+                  <a target="_blank" rel="noreferrer" className="underline">
+                    General settings
+                  </a>
+                </Link>
+                .
+              </p>
             </div>
           </Modal.Content>
           <Modal.Separator />
